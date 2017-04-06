@@ -1,0 +1,116 @@
+#!/usr/bin/env node
+'use strict';
+
+require('colors')
+var fs = require('fs')
+var path = require('path')
+var commander = require('commander')
+var mkdirp = require('mkdirp')
+var request = require('request')
+var unzip = require('unzip')
+var ProgressBar = require('progress')
+var ncp = require('ncp').ncp
+var del = require('del')
+var meta = require('../package.json')
+var ENV = process.env
+var tmp_dir = path.join(ENV.APPDATA || ENV.HOME || __dirname, '.wxpage')
+mkdirp.sync(tmp_dir)
+
+function print (o) {
+	console.log(o)
+}
+commander
+	.version(meta.version)
+commander
+	.command('init')
+	.option('-p, --proxy <url>', 'enable proxy')
+    .option('-d, --dest <path>', 'init to specified directory')
+	.description('Init wxpage project.')
+	.action(function (command) {
+		var t = new Date()
+		var name = 'wxpage-app-master'
+		var dest = command.dest || '.'
+		mkdirp.sync(dest)
+		var pkgdir = path.join(tmp_dir, name)
+		var ropts = {
+			url: 'https://github.com/tvfe/wxpage-app/archive/master.zip',
+			timeout: 10*1000
+		}
+		print('≈'.yellow + ' Download package "' + 'tvfe/wxpage'.blue + '", waiting...')
+		del.sync([pkgdir+'/**'], {
+			force: true
+		})
+		if (command.proxy) {
+			ropts.proxy = command.proxy
+		}
+		downloadAndInit()
+		function downloadAndInit() {
+			if(ropts.proxy) print('Ω'.red + ' Download behind proxy ' + ropts.proxy.gray + '')
+			request(ropts)
+				.on('response', function (res) {
+					var len = parseInt(res.headers['content-length'], 10)
+					if (len) {
+						var bar = new ProgressBar('    * Downloading '.gray + '[:bar] :percent :etas', {
+							complete: '=',
+							incomplete: ' ',
+							width: 20,
+							total: len
+						})
+						print('')
+						res.on('data', function (chunk) {
+					 		bar.tick(chunk.length);
+						})
+					}
+					res.on('end', function () {
+						print('')
+					})
+				})
+				.on('error', function (err) {
+					if (err.code == 'ETIMEDOUT') {
+						console.log('Ω Download timeout, trying proxy: wxpage init -p https://your.proxy.com:8080')
+					} else {
+						console.error('Ω Download error:'.red, err)
+					}
+				})
+				.pipe(unzip.Extract({ path: tmp_dir }))
+				.on('close', function () {
+
+					var abspath = path.isAbsolute(dest)
+						? dest
+						: path.normalize(path.join(process.cwd(), dest))
+					var projectName = path.basename(abspath)
+
+					function rename(fname) {
+						var fpath = path.join(pkgdir, fname)
+						if (fs.existsSync(fpath)) {
+							fs.renameSync(fpath, path.join(pkgdir, projectName + '.js'))
+						}
+					}
+					function replaceContent(fname) {
+						var fpath = path.join(pkgdir, fname)
+						if (fs.existsSync(fpath)) {
+							var content = fs.readFileSync(fpath, 'utf-8')
+								.replace(/\bproject_name\b/g, projectName)
+							fs.writeFileSync(fpath, content, 'utf-8')
+						}
+					}
+					;['package.json','README.md'].forEach(replaceContent)
+					;['project_name.js'].forEach(rename)
+
+					print('√'.green + ' Done, project "' + projectName.green + '" is inited. ' + ((new Date() - t) + 'ms').blue.gray)
+					ncp.limit = 16
+					ncp(path.join(tmp_dir, name), dest, {
+						filter: function (name) {
+							return !/LICENSE$/.test(name)
+						},
+						clobber: false
+					}, function (err) {
+						if (err) {
+						   return console.error(err)
+						}
+					})
+			  	})
+		}
+	})
+
+commander.parse(process.argv)

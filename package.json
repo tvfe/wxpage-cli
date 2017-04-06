@@ -1,0 +1,33 @@
+{
+  "name": "vfe-cli",
+  "version": "0.0.1",
+  "description": "CLI tool for wxpage framework.",
+  "main": "index.js",
+  "bin": {
+    "wxpage": "bin/wxpage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tvfe/wxpage.git"
+  },
+  "keywords": [
+    "wxpage",
+    "CLI"
+  ],
+  "author": "switer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tvfe/wxpage/issues"
+  },
+  "homepage": "https://github.com/tvfe/wxpage#readme",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "commander": "^2.8.1",
+    "mkdirp": "^0.5.1",
+    "request": "^2.65.0",
+    "unzip": "^0.1.11",
+    "ncp": "^2.0.0",
+    "progress": "^1.1.8",
+    "del": "^2.2.0"
+  }
+}
