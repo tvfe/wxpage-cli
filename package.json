@@ -1,5 +1,5 @@
 {
-  "name": "vfe-cli",
+  "name": "wxpage-cli",
   "version": "0.0.1",
   "description": "CLI tool for wxpage framework.",
   "main": "index.js",

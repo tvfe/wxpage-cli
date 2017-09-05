@@ -24,7 +24,7 @@ commander
 commander
 	.command('init')
 	.option('-p, --proxy <url>', 'enable proxy')
-    .option('-d, --dest <path>', 'init to specified directory')
+    .option('-d, --dest <path>', 'init project to specified directory')
 	.description('Init wxpage project.')
 	.action(function (command) {
 		var t = new Date()
