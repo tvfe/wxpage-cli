@@ -1,6 +1,6 @@
 {
   "name": "wxpage-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "CLI tool for wxpage framework.",
   "main": "index.js",
   "bin": {
